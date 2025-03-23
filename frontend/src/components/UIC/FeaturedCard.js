@@ -1,10 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom"
 
-export default function FeaturedCard(props) {
+export default function FeaturedCard({ title, description, image, id, tripType }) {
     const navigate = useNavigate()
     const visitDetails = () => {
-        navigate(`/experiencedetails/${props.id}`)
+        navigate(`/experiencedetails/${id}`)
     }
     
     const defaultImage = "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=2074&auto=format&fit=crop";
@@ -13,8 +13,8 @@ export default function FeaturedCard(props) {
         <div className="relative bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-xl overflow-hidden my-6 transform hover:-translate-y-1 transition-all duration-300">
             <div className="absolute top-0 left-0 w-full h-full">
                 <img
-                    src={props.image || defaultImage}
-                    alt={props.title}
+                    src={image || defaultImage}
+                    alt={title}
                     className="w-full h-full object-cover mix-blend-overlay opacity-30"
                     onError={(e) => {
                         e.target.src = defaultImage;
@@ -28,12 +28,12 @@ export default function FeaturedCard(props) {
                 </span>
             </div>
             <div className="relative p-8 text-white">
-                <h2 className="text-3xl font-bold mb-3">{props.title}</h2>
+                <h2 className="text-3xl font-bold mb-3">{title}</h2>
                 <span className="inline-block bg-white/20 text-white text-sm px-4 py-1 rounded-full mb-4">
-                    {props.tripType}
+                    {tripType}
                 </span>
                 <p className="text-white/90 mb-6 text-lg">
-                    {props.description}
+                    {description}
                 </p>
                 <button 
                     onClick={visitDetails}

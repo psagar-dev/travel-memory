@@ -42,16 +42,14 @@ export default function AddExperience() {
 
   const submitForm = async () => {
     if (!validateForm()) {
-      window.scrollTo(0, 0);
       return;
     }
     
     setLoading(true);
     try {
-      await axios.post(`${baseUrl}/trip`, formdata);
+      await axios.post(`${baseUrl}/api/trips`, formdata);
       navigate('/');
     } catch (error) {
-      console.error(error);
       setErrors({ submit: "Failed to submit the form. Please try again." });
     } finally {
       setLoading(false);
@@ -73,10 +71,11 @@ export default function AddExperience() {
           {/* Left Section */}
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="tripName">
                 Trip Name *
               </label>
               <input
+               id="tripName"
                 type="text"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                   errors.tripName ? 'border-red-500' : 'border-gray-300'
@@ -97,10 +96,11 @@ export default function AddExperience() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="startDateOfJourney">
                   Start Date *
                 </label>
                 <input
+                  id="startDateOfJourney"
                   type="date"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                     errors.startDateOfJourney ? 'border-red-500' : 'border-gray-300'
@@ -119,10 +119,11 @@ export default function AddExperience() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="endDateOfJourney">
                   End Date *
                 </label>
                 <input
+                  id="endDateOfJourney"
                   type="date"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                     errors.endDateOfJourney ? 'border-red-500' : 'border-gray-300'
@@ -142,10 +143,11 @@ export default function AddExperience() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="nameOfHotels">
                 Hotels
               </label>
               <input
+                id="nameOfHotels"
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Add your Hotel Names"
@@ -155,10 +157,11 @@ export default function AddExperience() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="tripType">
                 Trip Type *
               </label>
               <select
+                id="tripType"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                   errors.tripType ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -184,10 +187,11 @@ export default function AddExperience() {
           {/* Right Section */}
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="totalCost">
                 Total Cost *
               </label>
               <input
+                id="totalCost"
                 type="number"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                   errors.totalCost ? 'border-red-500' : 'border-gray-300'
@@ -207,10 +211,11 @@ export default function AddExperience() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="placesVisited">  
                 Places Visited *
               </label>
               <input
+                id="placesVisited"
                 type="text"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                   errors.placesVisited ? 'border-red-500' : 'border-gray-300'
@@ -230,10 +235,11 @@ export default function AddExperience() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="image">
                 Image Link
               </label>
               <input
+                id="image"
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 placeholder="http://xyz.com/image.png"
@@ -243,10 +249,11 @@ export default function AddExperience() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="shortDescription"> 
                 Short Description *
               </label>
               <textarea
+                id="shortDescription"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                   errors.shortDescription ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -266,10 +273,11 @@ export default function AddExperience() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="experience">
                 Experience *
               </label>
               <textarea
+                id="experience"
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                   errors.experience ? 'border-red-500' : 'border-gray-300'
                 }`}

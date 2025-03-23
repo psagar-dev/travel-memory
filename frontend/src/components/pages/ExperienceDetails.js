@@ -11,13 +11,12 @@ export default function ExperienceDetails() {
   const defaultImage = "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=2074&auto=format&fit=crop";
 
   useEffect(() => {
-    axios.get(`${baseUrl}/trip/${id}`)
+    axios.get(`${baseUrl}/api/trips/${id}`)
       .then((res) => {
-        setData(res.data);
+        setData(res.data.data); // Access the data property from the response
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
         setLoading(false);
       });
   }, [id]);
@@ -25,7 +24,7 @@ export default function ExperienceDetails() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div data-testid="loading-spinner" className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }

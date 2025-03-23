@@ -1,10 +1,19 @@
 const mongoose = require('mongoose')
-const URL = process.env.MONGO_URI
 
-mongoose.connect(URL)
-mongoose.Promise = global.Promise
+async function connectDB(url = process.env.MONGO_URI) {
+    try {
+        await mongoose.connect(url, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
+        mongoose.Promise = global.Promise;
+        const db = mongoose.connection;
+        db.on('error', console.error.bind(console, 'DB ERROR: '));
+        return db;
+    } catch (error) {
+        console.error('Database connection error:', error);
+        throw error;
+    }
+}
 
-const db = mongoose.connection
-db.on('error', console.error.bind(console, 'DB ERROR: '))
-
-module.exports = {db, mongoose}
+module.exports = { connectDB, mongoose }

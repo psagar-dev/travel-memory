@@ -9,13 +9,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${baseUrl}/trip/`)
+    axios.get(`${baseUrl}/api/trips/`)
       .then((res) => {
-        setData(res.data);
+        setData(res.data.data); // Access the data property from the response
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
+        setData([]);
         setLoading(false);
       });
   }, []);
@@ -23,12 +23,14 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
       </div>
     );
   }
 
-  if (!data) {
+  if (!data || data.length === 0) {
     return (
       <div className="text-center py-10">
         <p className="text-gray-600">No trips found.</p>
