@@ -1,0 +1,19 @@
+name: gitleaks
+on:
+  push:
+    branches:
+      - main
+jobs:
+    scan:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: "install gitleaks"
+              run: |
+                sudo apt update
+                sudo apt install gitleaks -y
+            - name: "run gitleaks"
+              run: |
+                gitleaks detect --source . --verbose --redact
