@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Deploy on Server",
+      "type": "shell",
+      "command": "wsl",
+      "args": [
+        "bash",
+        "/mnt/c/Users/91704/Desktop/Devops/Cred/deploy/deploy.sh"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

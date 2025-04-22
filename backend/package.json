@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "jest"
   },
-  "author": "Prashant Dey",
+  "author": "Sagar Patel",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",

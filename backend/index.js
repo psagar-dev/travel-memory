@@ -11,6 +11,10 @@ app.use(cors())
 const tripRoutes = require('./routes/tripRoutes')
 app.use('/api/trips', tripRoutes)
 
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.get('/hello', (req,res)=>{
     res.send('Hello World!')
 })

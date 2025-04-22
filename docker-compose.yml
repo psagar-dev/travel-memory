@@ -1,0 +1,42 @@
+services:
+  tm-backend-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tm-backend-api
+    ports:
+      - "3001:3001"
+    networks:
+      - external_network
+    environment:
+      - MONGO_URI=mongodb://root:root@mongodb:27017/?authSource=admin
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://192.168.31.100:3001/health  || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+ 
+  tm-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_BACKEND_URL=http://192.168.31.100:3001
+    container_name: tm-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - tm-backend-api
+    networks:
+      - external_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://192.168.31.100  || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  external_network:
+    driver: bridge
+    external: true
+    name: my_network
