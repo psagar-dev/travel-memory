@@ -31,7 +31,10 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy only the necessary files from the builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Copy nginx configuration file
+# Copy custom Nginx config
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose
 EXPOSE 80
 
 # Build the application
