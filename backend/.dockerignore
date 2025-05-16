@@ -27,3 +27,4 @@ docker-compose*.yml
 Thumbs.db
 # temporary
 tmp/
+tests
