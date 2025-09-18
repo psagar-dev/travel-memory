@@ -1,0 +1,12 @@
+---
+# Default variables - can be overridden
+mongodb_packages:
+  - gnupg
+  - curl
+  - python3-pip
+
+python_packages:
+  - pymongo>=4.0
+
+mongodb_gpg_key_url: "https://www.mongodb.org/static/pgp/server-{{ mongodb_version }}.asc"
+mongodb_repo_url: "https://repo.mongodb.org/apt/ubuntu"

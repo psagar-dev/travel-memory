@@ -1,0 +1,6 @@
+nodejs_version: "22.x"
+
+required_system_packages:
+  - apt-transport-https
+  - ca-certificates
+  - gpg

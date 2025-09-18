@@ -1,0 +1,130 @@
+- name: Create Prometheus user and group
+  user:
+    name: "{{ prometheus_user }}"
+    system: yes
+    shell: /bin/false
+    home: "{{ prometheus_install_dir }}"
+    create_home: no
+  tags: create_prometheus_user
+
+- name: Create installation and configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+  loop:
+    - "{{ prometheus_install_dir }}"
+    - "{{ prometheus_config_dir }}"
+    - "{{ prometheus_data_dir }}"
+  tags: install
+
+- name: Download and extract Prometheus directly to install directory
+  unarchive:
+    src: "{{ prometheus_download_url }}"
+    dest: "{{ prometheus_install_dir }}"
+    remote_src: yes
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+  tags: download
+
+- name: List files in installation directory
+  command: ls -la "{{ prometheus_install_dir }}"
+  tags: list
+
+- name: Find the actual prometheus binary directory
+  find:
+    paths: "{{ prometheus_install_dir }}"
+    patterns: "prometheus*"
+    file_type: directory
+  register: prometheus_dirs
+  tags: find
+
+- name: Move contents to root of installation directory if nested
+  shell: |
+    if [ -d "{{ prometheus_install_dir }}/prometheus-{{ prometheus_version }}.linux-amd64" ]; then
+      mv "{{ prometheus_install_dir }}/prometheus-{{ prometheus_version }}.linux-amd64"/* "{{ prometheus_install_dir }}/"
+      rm -rf "{{ prometheus_install_dir }}/prometheus-{{ prometheus_version }}.linux-amd64"
+    fi
+  args:
+    executable: /bin/bash
+  when: prometheus_dirs.files | length > 0
+  tags: move
+
+- name: Create symbolic links for binaries
+  file:
+    src: "{{ prometheus_install_dir }}/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    state: link
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    force: yes
+  loop:
+    - prometheus
+    - promtool
+  tags: symlink
+
+- name: Check if configuration files exist
+  stat:
+    path: "{{ prometheus_install_dir }}/{{ item }}"
+  register: config_files
+  loop:
+    - prometheus.yml
+    - consoles
+    - console_libraries
+  tags: config_check
+
+- name: Copy existing configuration files
+  copy:
+    src: "{{ prometheus_install_dir }}/{{ item.item }}"
+    dest: "{{ prometheus_config_dir }}/"
+    remote_src: yes
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+  loop: "{{ config_files.results }}"
+  when: item.stat.exists
+  notify: restart prometheus
+  tags: copy_config
+
+- name: Create default prometheus.yml if it doesn't exist
+  template: 
+    src: prometheus.yml.j2
+    dest: "{{ prometheus_config_dir }}/prometheus.yml"
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    mode: '0644'
+  when: not config_files.results[0].stat.exists
+  notify: restart prometheus
+  tags: default_config
+
+- name: Create empty directories if they don't exist
+  file:
+    path: "{{ prometheus_config_dir }}/{{ item }}"
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+  loop:
+    - consoles
+    - console_libraries
+  when: not config_files.results[1].stat.exists or not config_files.results[2].stat.exists
+  tags: create_dirs
+
+- name: Configure systemd service
+  template:
+    src: prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - daemon-reload
+    - restart prometheus
+  tags: systemd
+
+- name: Ensure proper permissions on installation directory
+  file:
+    path: "{{ prometheus_install_dir }}"
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    recurse: yes
+  tags: permissions

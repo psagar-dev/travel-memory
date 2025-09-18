@@ -1,0 +1,75 @@
+---
+- name: Install Node.js {{ nodejs_version }} prerequisites
+  apt:
+    name: "{{ required_system_packages }}"
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Create keyrings directory for NodeSource GPG key
+  file:
+    path: "{{ nodejs_gpg_keyring_path }}"
+    state: directory
+    mode: '0755'
+  become: yes
+  
+- name: Check if MongoDB GPG key already exists
+  stat:
+    path: "{{ nodejs_gpg_keyring }}"
+  register: nodejs_gpg_keyring_stat
+
+- name: Download NodeSource GPG key
+  get_url:
+    url: "{{ nodejs_gpg_download }}"
+    dest: "{{ nodejs_gpg_key_dest }}"  # Temporary ASCII-armored file
+    mode: '0644'
+  become: yes
+  when: not nodejs_gpg_keyring_stat.stat.exists
+  tags: repository
+
+- name: Dearmor NodeSource GPG key to binary format
+  shell: gpg --dearmor -o {{ nodejs_gpg_keyring }} {{ nodejs_gpg_key_dest }}
+  args:
+    creates: "{{ nodejs_gpg_keyring }}"
+  become: yes
+  when: not nodejs_gpg_keyring_stat.stat.exists
+  tags: repository
+
+- name: Remove temporary GPG file
+  file:
+    path: "{{ nodejs_gpg_key_dest }}"
+    state: absent
+  become: yes
+  when: not nodejs_gpg_keyring_stat.stat.exists
+  tags: repository
+
+- name: Set proper permissions on NodeSource GPG key
+  file:
+    path: "{{ nodejs_gpg_keyring }}"
+    mode: '0644'
+  become: yes
+  tags: repository
+
+- name: Add NodeSource APT repository (modern signed-by format)
+  apt_repository:
+    repo: "deb [signed-by={{ nodejs_gpg_keyring }}] {{ nodejs_repo_url }} nodistro main"
+    state: present
+    filename: nodesource
+    update_cache: yes
+  become: yes
+  tags: repository
+
+- name: Install Node.js {{ nodejs_version }}
+  apt:
+    name: nodejs
+    state: present
+  become: yes
+  register: nodejs_install
+  tags: install
+
+- name: Verify Node.js version
+  shell: node -v | grep -q "^v{{ nodejs_version.split('.')[0] }}"
+  register: version_check
+  failed_when: version_check.rc != 0
+  changed_when: false
+  tags: check_version

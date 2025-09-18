@@ -1,0 +1,53 @@
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Create web root directory
+  file:
+    path: "{{ web_root }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Remove default Nginx site
+  file:
+    path: "{{ nginx_default_site_enabled }}"
+    state: absent
+  notify: "nginx config changed"
+
+- name: Validate Nginx configuration syntax
+  command: nginx -t
+  register: nginx_test
+  changed_when: false
+  check_mode: no
+
+- name: Create Nginx configuration
+  template:
+    src: "{{ template_nginx_configuration_src }}"
+    dest: "{{ template_nginx_sites_available_dest }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: "nginx config changed"
+  tags: nginx-configuration
+
+- name: Enable site
+  file:
+    src: "{{ template_nginx_sites_available_dest }}"
+    dest: "{{ template_nginx_site_enabled_dest }}"
+    state: link
+  notify: "nginx config changed"
+
+- name: Verify Nginx is serving content
+  uri:
+    url: "http://localhost/"
+    status_code: 200
+  register: nginx_status
+  until: nginx_status.status == 200
+  retries: 5
+  delay: 2
+  ignore_errors: yes
+  tags: nginx-verification

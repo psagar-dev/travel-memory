@@ -1,0 +1,45 @@
+- name: Add Grafana GPG key
+  apt_key:
+    url: https://packages.grafana.com/gpg.key
+    state: present
+  tags: grafana-gpg
+
+- name: Add Grafana APT repository
+  apt_repository:
+    repo: "deb {{ apt_repo }} stable main"
+    state: present
+    filename: "grafana"
+  tags: grafana-repository
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install Grafana (pinned version)
+  apt:
+    name: "grafana={{ grafana_version }}"
+    state: present
+    force_apt_get: yes
+  environment:
+    GF_INSTALL_PLUGINS: "{{ grafana_plugins | join(',') }}"
+
+- name: Create Grafana directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: '0755'
+  loop:
+    - "{{ grafana_datasources_dir }}"
+    - "{{ grafana_dashboards_dir }}"
+    - "{{ grafana_dashboards_json_dir }}"
+  notify: restart grafana
+
+- name: Ensure Grafana service is enabled and started
+  systemd:
+    name: grafana-server
+    state: started
+    enabled: yes
+    daemon_reload: yes

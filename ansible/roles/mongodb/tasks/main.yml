@@ -1,0 +1,95 @@
+---
+- name: Ensure required packages are installed
+  apt:
+    name: "{{ mongodb_packages }}"
+    state: present
+    update_cache: yes
+  tags: packages
+
+- name: Install Python dependencies
+  pip:
+    name: "{{ python_packages }}"
+    state: present
+    executable: pip3
+    extra_args: --break-system-packages # Uncomment if you face issues on newer Ubuntu versions
+  tags: python
+
+- name: Check if MongoDB GPG key already exists
+  stat:
+    path: "{{ mongodb_gpg_keyring }}"
+  register: mongodb_gpg_keyring_stat
+
+- name: Download MongoDB GPG key
+  get_url:
+    url: "{{ mongodb_gpg_key_url }}"
+    dest: "{{ mongodb_gpg_key_dest }}"
+    mode: '0644'
+  when: not mongodb_gpg_keyring_stat.stat.exists
+  tags: repository
+
+- name: Import MongoDB GPG key
+  command:
+    cmd: gpg --dearmor -o "{{ mongodb_gpg_keyring }}" "{{ mongodb_gpg_key_dest }}"
+    creates: "{{ mongodb_gpg_keyring }}"
+  when: not mongodb_gpg_keyring_stat.stat.exists
+  tags: repository
+
+- name: Clean up temporary GPG key file
+  file:
+    path: "{{ mongodb_gpg_key_dest }}"
+    state: absent
+  when: not mongodb_gpg_keyring_stat.stat.exists
+  tags: repository
+
+- name: Add MongoDB repository
+  apt_repository:
+    repo: "deb [ arch=amd64,arm64 signed-by={{ mongodb_gpg_keyring }} ] {{ mongodb_repo_url }} {{ ansible_distribution_release }}/mongodb-org/{{ mongodb_version }} multiverse"
+    state: present
+    filename: "{{ mongodb_repo_file }}"
+    update_cache: yes
+  tags: repository
+
+- name: Install MongoDB
+  apt:
+    name: mongodb-org
+    state: present
+    update_cache: yes
+  notify: restart mongod
+  tags: install
+
+- name: Configure MongoDB
+  template:
+    src: mongod.conf.j2
+    dest: /etc/mongod.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart mongodb
+  tags: config
+
+- name: Ensure MongoDB service is enabled and started
+  systemd:
+    name: mongod
+    state: started
+    enabled: yes
+  tags: service
+
+- name: Wait for MongoDB to be available
+  wait_for:
+    port: "{{ mongodb_port }}"
+    host: "{{ ansible_default_ipv4.address }}"
+    delay: 10
+    timeout: 60
+    state: started
+  tags: service
+
+- name: Create MongoDB application user
+  community.mongodb.mongodb_user:
+    database: "{{ mongodb_database }}"
+    name: "{{ mongodb_admin_user }}"
+    password: "{{ mongodb_admin_password }}"
+    roles: "{{ mongodb_user_roles }}"
+    state: present
+    login_host: "{{ ansible_default_ipv4.address }}"
+    login_port: "{{ mongodb_port }}"
+  tags: database

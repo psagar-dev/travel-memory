@@ -1,0 +1,11 @@
+---
+# MongoDB specific variables
+mongodb_version: "8.0"
+mongodb_bind_ip: "0.0.0.0"
+mongodb_port: 27017
+mongodb_admin_user: "traveluser"
+mongodb_admin_password: "traveluserPassword"
+mongodb_database: "travel"
+mongodb_user_roles: ["readWrite", "dbAdmin"]
+
+app_name: travel-memory-hv

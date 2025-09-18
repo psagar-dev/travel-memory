@@ -1,0 +1,5 @@
+---
+# Internal variables - not meant to be overridden
+mongodb_gpg_key_dest: "/tmp/mongodb-server-{{ mongodb_version }}.asc"
+mongodb_gpg_keyring: "/usr/share/keyrings/mongodb-server-{{ mongodb_version }}.gpg"
+mongodb_repo_file: "mongodb-org-{{ mongodb_version }}"

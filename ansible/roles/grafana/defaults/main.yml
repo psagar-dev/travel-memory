@@ -1,0 +1,6 @@
+grafana_version: "12.1.1"
+grafana_plugins:
+  - "grafana-piechart-panel"
+grafana_datasources_dir: "/etc/grafana/provisioning/datasources"
+grafana_dashboards_dir: "/etc/grafana/provisioning/dashboards"
+grafana_dashboards_json_dir: "/var/lib/grafana/dashboards"

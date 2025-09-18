@@ -1,0 +1,5 @@
+nginx_site_enabled_path: "/etc/nginx/sites-enabled"
+nginx_default_site_enabled: "{{ nginx_site_enabled_path }}/default"
+template_nginx_configuration_src: "nginx.conf.j2"
+template_nginx_sites_available_dest: "/etc/nginx/sites-available/{{ app_name }}"
+template_nginx_site_enabled_dest: "{{ nginx_site_enabled_path }}/{{ app_name }}"

@@ -1,0 +1,9 @@
+---
+- name: restart pm2
+  command:
+    cmd: pm2 restart travel-memory-backend --update-env
+  register: pm2_restart
+  changed_when: >
+    "'restarted' in pm2_restart.stdout or 
+     'online' in pm2_restart.stdout or
+     'success' in pm2_restart.stdout"

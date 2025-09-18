@@ -1,0 +1,9 @@
+required_system_packages:
+  - git
+  - curl
+  - vim
+  - unzip
+  - build-essential
+  - libssl-dev
+  - python3
+  - rsync

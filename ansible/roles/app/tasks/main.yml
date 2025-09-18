@@ -1,0 +1,126 @@
+---
+#backend deployment
+- name: Clone TravelMemory repository
+  git:
+    repo: "https://github.com/psagar-dev/travel-memory-hv.git"
+    dest: "{{ app_directory }}"
+    version: "{{ deployment_branch | default('main') }}" # or a specific stable branch/tag
+    force: yes
+    update: yes
+  tags: clone
+
+- name: Create backend .env configuration
+  template:
+    src: "backend.env.j2"
+    dest: "{{ app_directory }}/backend/.env"
+    mode: '0640'
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  tags: configuration
+
+- name: Install backend dependencies
+  npm:
+    path: "{{ app_directory }}/backend"
+    state: present
+    production: yes
+  notify: restart pm2
+  tags: backend-deps
+
+- name: Install PM2 globally
+  ansible.builtin.npm:
+    name: pm2
+    global: yes
+    state: present
+  tags: pm2-setup
+
+- name: Check PM2 processes
+  command: pm2 jlist
+  register: pm2_list
+  changed_when: false
+  failed_when: false
+  tags: pm2_deployment
+
+- name: Parse PM2 list and get app
+  set_fact:
+    pm2_app: >-
+      {{
+        (pm2_list.stdout | default('[]') | from_json)
+        | selectattr('name', 'equalto', 'travel-memory-backend')
+        | list | first | default(None)
+      }}
+  tags: pm2_deployment
+
+- name: Debug PM2 state
+  debug:
+    msg: "PM2 app state: {{ pm2_app.pm2_env.status if pm2_app is not none else 'not found' }}"
+  tags: pm2_deployment
+
+- name: Start PM2 app if not found
+  command:
+    cmd: pm2 start index.js --name "travel-memory-backend" --update-env
+    chdir: "{{ app_directory }}/backend"
+  when: pm2_app is none
+  tags: pm2_deployment
+  notify: restart pm2
+
+- name: Restart PM2 app if stopped/errored
+  command:
+    cmd: pm2 restart travel-memory-backend --update-env
+    chdir: "{{ app_directory }}/backend"
+  when: pm2_app is not none and pm2_app.pm2_env.status in ['stopped', 'errored']
+  tags: pm2_deployment
+  notify: restart pm2
+
+- name: Reload PM2 app if online
+  command:
+    cmd: pm2 reload travel-memory-backend --update-env
+    chdir: "{{ app_directory }}/backend"
+  when: pm2_app is not none and pm2_app.pm2_env.status == 'online'
+  tags: pm2_deployment
+
+# Frontend Deployment
+- name: Create frontend .env configuration
+  template:
+    src: "frontend.env.j2"
+    dest: "{{ app_directory }}/frontend/.env"
+    mode: '0640'
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  tags: configuration
+
+- name: Install frontend dependencies
+  npm:
+    path: "{{ app_directory }}/frontend"
+    state: present
+    production: yes
+  tags: frontend-deps
+
+- name: Update Browserslist DB
+  command: npx update-browserslist-db@latest --update-db
+  args:
+    chdir: "{{ app_directory }}/frontend"
+  environment:
+    BROWSERSLIST_IGNORE_OLD_DATA: "1"
+  tags: frontend-deps
+
+- name: Build frontend application
+  command: npm run build
+  args:
+    chdir: "{{ app_directory }}/frontend"
+  environment:
+    GENERATE_SOURCEMAP: "false"
+    NODE_ENV: "production"
+  tags: build-frontend
+
+- name: Copy built frontend to web root
+  command: rsync -a --delete {{ app_directory }}/frontend/build/ {{ web_root }}/
+  become: true
+  tags: deploy-frontend
+
+- name: Set correct permissions on web root
+  file:
+    path: "{{ web_root }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+    recurse: yes

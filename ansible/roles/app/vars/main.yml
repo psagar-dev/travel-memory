@@ -1,0 +1,14 @@
+app_user: www-data
+app_group: www-data
+app_directory: /home/ubuntu/{{ app_name }}
+web_root: /var/www/html
+
+deployment_branch: main
+
+required_system_packages:
+  - git
+  - curl
+  - build-essential
+  - libssl-dev
+  - python3
+  - rsync
