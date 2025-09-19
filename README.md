@@ -1,8 +1,30 @@
-#### End-to-End MERN Application Deployment and Monitoring with Terraform, Ansible, Prometheus, and Grafana
+### ✈️ End-to-End MERN Application Deployment and Monitoring with Terraform, Ansible, Prometheus, and Grafana
 
-This project deploys a MERN stack Travel Memory application using AWS services such as EC2, Application Load Balancer (ALB), Auto Scaling Groups (ASG), Target Groups, and Cloudflare for enhanced security and DNS management.
+A full-stack MERN application deployed on AWS using Terraform for infrastructure provisioning and Ansible for configuration management. Includes observability with Prometheus & Grafana.
 
 ---
+#### 📦 Project Structure
+```
+travel-memory/
+├── terraform/         # Infrastructure provisioning
+│   ├── modules/       # Reusable Terraform modules
+│   ├── main.tf        # Root config
+│   ├── variables.tf   # Input variables
+│   ├── outputs.tf     # Output values
+│   ├── backend.tf     # S3 + DynamoDB backend
+│   └── provider.tf    # AWS provider
+├── ansible/           # Ansible playbooks & roles
+│   ├── group_vars/  # group_vars Model
+│   ├── playbook.yaml  # Main Playbook
+│   ├── inventory.ini  # Hosts definition
+│   ├── roles/
+│   │   ├── common/    # Base setup
+│   │   ├── nodejs/    # Node.js setup
+│   │   ├── mongodb/   # MongoDB setup
+│   │   ├── nginx/     # Reverse proxy setup
+│   │   └── app/       # TravelMemory deployment
+└── images/            # Diagrams & screenshots
+```
 
 #### 📁 Project Overview
 
@@ -57,22 +79,6 @@ Link Follow for [Installing Ansible on Ubuntu](https://docs.ansible.com/ansible/
 ## 🛠 Terraform Infrastructure Provisioning
 
 Terraform is used to provision AWS infrastructure for the application, including VPC, security groups, and EC2 instances.
-
-### Project Directory Structure
-```plaintext
-E-CommerceStore/
-├── terraform/
-│   ├── modules/
-│   │   ├── vpc/                   # VPC configuration
-│   │   ├── security_group/        # Security group rules
-│   │   ├── ec2/                   # EC2 instance setup
-│   ├── main.tf                    # Main configuration
-│   ├── variables.tf               # Global variables
-│   ├── outputs.tf                 # Output values
-│   ├── terraform.tfvars           # Variable values
-│   ├── backend.tf                 # S3 backend for state
-│   ├── provider.tf                # AWS provider
-```
 
 ### Step 1: Configure Terraform Backend
 File: `terraform/backend.tf`
@@ -530,6 +536,64 @@ instance_type_db  = "t2.micro"
 key_name          = "sagar-b10"
 ```
 
+### 🚀 Deployment Steps
+
+1. **Configure AWS Credentials**:
+   Ensure AWS credentials are set in `~/.aws/credentials` or as environment variables.
+
+2. **Initialize Terraform**:
+   ```bash
+   cd travel-memory/terraform
+   terraform init
+   ```
+   ![terraform init](images/terraform-init.png)
+
+3. **Format and Validate**:
+   ```bash
+   terraform fmt
+   terraform validate
+   ```
+   ![terraform fmt validate](images/terraform-fmt-validate.png)
+
+4. **Preview Changes**:
+   ```bash
+   terraform plan -var-file="terraform.tfvars"
+   ```
+   ![terraform plan](images/terraform-plan.png)
+
+5. **Apply Configuration**:
+   ```bash
+   terraform apply -var-file="terraform.tfvars"
+   ```
+   ![terraform apply](images/terraform-apply.png)
+6. **Access Application**:
+   - Use the `frontend_url` output from Terraform to access the application.
+   - Example: [http://<EC2_PUBLIC_IP>:80](http://<EC2_PUBLIC_IP>:80)
+
+7. **Destroy Infrastructure** (when needed):
+   ```bash
+   terraform destroy -var-file="terraform.tfvars"
+   ```
+   ![terraform destroy](images/terraform-destroy.png)
+---
+
+- 🌐 **VPC**
+
+![terraform vpc list](images/vpc-list.png)
+![terraform vpc detail](images/vpc-detail.png)
+
+- 🗄️ **DynamoDB**
+
+![terraform DynamoDB detail ](images/DynamoDB-detail.png)
+- 📦 **S3 Detail**
+
+![terraform s3 detail](images/s3-details.png)
+
+- 🛡️ **Security Groups**
+
+![terraform security group db validate](images/security-group-db.png)
+
+![terraform security group](images/security-group.png)
 
 ## 🛠 Configuration Management with Ansible
 
@@ -569,6 +633,7 @@ required_system_packages:
   - python3
   - rsync
 ```
+![ansible: common](images/common-roles.png)
 
 Role: `nodejs`: Setup on server.
 File: `roles/nodejs/defaults/main.yml`
@@ -669,6 +734,7 @@ nodejs_gpg_keyring: "/etc/apt/keyrings/nodesource.gpg"
 nodejs_gpg_download: "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key"
 nodejs_repo_url: "https://deb.nodesource.com/node_{{ nodejs_version }}"
 ```
+![ansible: nodejs](images/nodejs-roles.png)
 
 Role: `mongodb`: Setup on DB server.
 File: `roles/mongodb/defaults/main.yml`
@@ -821,6 +887,8 @@ mongodb_gpg_key_dest: "/tmp/mongodb-server-{{ mongodb_version }}.asc"
 mongodb_gpg_keyring: "/usr/share/keyrings/mongodb-server-{{ mongodb_version }}.gpg"
 mongodb_repo_file: "mongodb-org-{{ mongodb_version }}"
 ```
+![ansible: MongoDB](images/mongodb-roles.png)
+![ansible: MongoDB Connect](images/mongo-db-connected.png)
 
 Role: `nginx`: Setup on server.
 File: `roles/nginx/tasks/main.yml`
@@ -919,7 +987,7 @@ server {
     }
 }
 ```
-
+![ansible: nginx](images/nginx-roles.png)
 
 Role: `app`: Setup on server.
 File: `roles/app/tasks/main.yml`
@@ -1093,6 +1161,8 @@ File: `roles/app/templates/frontend.env.j2`
 ```yml
 REACT_APP_BACKEND_URL=http://65.0.96.55:3001
 ```
+
+![ansible: common](images/app-roles.png)
 
 ### Step 3: Create `Group_vars`
 File: `group_vars/all/vars.yml`
@@ -1434,6 +1504,7 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:3000/metrics']  # Adjust to your Node.js metrics endpoint
 ```
+![ansible: prometheus](images/prometheus.png)
 
 Role: `grafana`: Setup on server.
 File: `roles/grafana/defaults/main.yml`
@@ -1508,6 +1579,25 @@ File: `roles/grafana/vars/main.yml`
 ```yml
 apt_repo: https://packages.grafana.com/oss/deb
 ```
+![ansible: grafana](images/grafana.png)
+
+#### Backend Live
+![ansible: backend API](images/backend-live.png)
+
+#### Frontend Live
+
+![ansible: Frontend List](images/fronten-live.png)
+
+#### Prometheus
+![ansible: metrics](images/prometheus-metrics.png)
+
+![ansible: prometheus](images/prometheus-target.png)
+
+#### Grafana
+![ansible: Grafana](images/grafana-dahsboard.png)
+
+![ansible: Grafana-error-alert](images/grafana-error-alert.png)
+
 
 ## 📜 Project Information
 
